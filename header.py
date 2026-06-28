@@ -67,7 +67,7 @@ class ViewMeta(type):
             if isinstance(val, str):
                 if is_valid_struct_format(val):
                     fmt: str = val
-                    ns2[name] = Field(name, fmt, offset)
+                    ns2[name] = FieldStr(name, fmt, offset)
                     fields.append(name)
                     offset += struct.calcsize(fmt)
                     if format_merged == "":
