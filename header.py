@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # PYTHON_ARGCOMPLETE_OK
-from typing import Any, ClassVar, BinaryIO
+from typing import Any, ClassVar, BinaryIO, Iterator
 from itertools import chain
 import struct
 
@@ -123,6 +123,49 @@ class Header(View):
     magic = "<i"
     bbox = Bbox
     num_points = "<i"
+
+
+def write_polygons():
+    for poly in polygons:
+        fmt: str = "<dd"
+        sz = struct.calcsize(fmt)
+        f.write(sz * len(poly))
+        for pp in poly:
+            f.write(struct.pack(fmt, pp))
+
+
+class Polygon:
+    def __init__(self, bytesdata: bytes):
+        self.view = memoryview(bytesdata)
+
+    @classmethod
+    def from_file(cls):
+        (sz,) = struct.unpack("<i", f.read(4))
+        return cls(f.read(sz))
+
+
+class PolygonStr(Polygon):
+    def __init__(self, bytesdata, fmt):
+        super().__init__(bytesdata)
+        self.fmt = fmt
+
+    def iter_as(self, fmt) -> Iterator[tuple[float, float]]:
+        sz = struct.calcsize(fmt)
+        for off in range(0, len(self.view), sz):
+            s = slice(off, off + sz)
+            yield struct.unpack_from(fmt, self.view[s])
+
+
+class PolygonType(Polygon):
+    def __init__(self, bytesdata: bytes, factory: ViewMeta):
+        super().__init__(bytesdata)
+        self.factory = factory
+
+    def iter_as(self) -> Iterator[ViewMeta]:
+        sz = self.factory.data_size
+        for off in range(0, len(self.view), sz):
+            s = slice(off, off + sz)
+            yield self.factory(self.view[s])
 
 
 def pack_header():
