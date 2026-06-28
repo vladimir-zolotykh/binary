@@ -41,6 +41,7 @@ class HeaderMeta(type):
     def __new__(mcls, clsname, bases, ns):
         ns2 = dict(ns)
         format_merged = ""
+        fields: list[str] = []
         offset: int = 0
         for name, val in ns.items():
             if name[:2] == "__" and name[-2:] == "__":
@@ -49,6 +50,7 @@ class HeaderMeta(type):
                 if is_valid_struct_format(val):
                     fmt: str = val
                     ns2[name] = Field(name, fmt, offset)
+                    fields.append(name)
                     offset += struct.calcsize(fmt)
                     if format_merged == "":
                         format_merged = fmt
@@ -60,12 +62,18 @@ class HeaderMeta(type):
                     raise TypeError(f"{val} Invalide struct format")
         ns2["_format_merged"] = format_merged
         ns2["data_size"] = offset
+        ns2["_fields"] = fields
         return super().__new__(mcls, clsname, bases, ns2)
 
 
 class View(metaclass=HeaderMeta):
     def __init__(self, bytesdata: bytes):
         self.view = memoryview(bytesdata)
+
+    def __repr__(self):
+        clsname = self.__class__.__name__
+        args = ", ".join(str(getattr(self, f)) for f in self._fields)
+        return f"{clsname}({args})"
 
 
 class Header(View):
@@ -100,7 +108,8 @@ def write_read_header():
 
 if __name__ == "__main__":
     with open("header.bin", "rb") as f:
-        print(Header._format_merged)
-        print(Header.data_size)
+        # print(Header._format_merged)
+        # print(Header.data_size)
         h = Header(f.read(Header.data_size))
-        print(h.magic)
+        # print(h.magic)
+        print(h)
