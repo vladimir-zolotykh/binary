@@ -21,14 +21,22 @@ def is_valid_struct_format(fmt: str) -> bool:
 
 
 class Field:
-    def __init__(self, name: str, fmt: str, offset: int):
+    def __init__(self, name: str, offset: int):
         self._name = name
-        self.fmt = fmt
         self.offset = offset
 
     def __get__(self, instance, owner=None):
         if instance is None:
             return self
+        return self.unpack(instance)
+
+
+class FieldStr(Field):
+    def __init__(self, name: str, fmt: str, offset: int):
+        super().__init__(name, offset)
+        self.fmt = fmt
+
+    def unpack(self, instance):
         s = slice(
             self.offset,
             self.offset + struct.calcsize(self.fmt),
@@ -37,7 +45,17 @@ class Field:
         return t[0] if len(t) == 1 else t
 
 
-class HeaderMeta(type):
+class FieldType(Field):
+    def __init__(self, name: str, factory: type, offset: int):
+        super().__init__(name, offset)
+        self.factory = factory
+
+    def unpack(self, instance):
+        s = slice(self.offset, self.offset + self.factory.data_size)
+        return self.factory(instance.view[s])
+
+
+class ViewMeta(type):
     def __new__(mcls, clsname, bases, ns):
         ns2 = dict(ns)
         format_merged = ""
@@ -60,13 +78,20 @@ class HeaderMeta(type):
                         format_merged += fmt
                 else:
                     raise TypeError(f"{val} Invalide struct format")
+            elif isinstance(val, ViewMeta):
+                factory: ViewMeta = val
+                ns2[name] = FieldType(name, factory, offset)
+                fields.append(name)
+                offset += factory.data_size
+            else:
+                raise TypeError(f"{val!r} expected struct foramt or ViewMeta type")
         ns2["_format_merged"] = format_merged
         ns2["data_size"] = offset
         ns2["_fields"] = fields
         return super().__new__(mcls, clsname, bases, ns2)
 
 
-class View(metaclass=HeaderMeta):
+class View(metaclass=ViewMeta):
     def __init__(self, bytesdata: bytes):
         self.view = memoryview(bytesdata)
 
@@ -76,12 +101,19 @@ class View(metaclass=HeaderMeta):
         return f"{clsname}({args})"
 
 
+class Point(View):
+    x = "<d"
+    y = "<d"
+
+
+class Bbox(View):
+    x1y1 = Point
+    x2y2 = Point
+
+
 class Header(View):
     magic = "<i"
-    x1 = "<d"
-    y1 = "<d"
-    x2 = "<d"
-    y2 = "<d"
+    bbox = Bbox
     num_points = "<i"
 
 
