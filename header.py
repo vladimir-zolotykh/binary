@@ -21,34 +21,54 @@ def is_valid_struct_format(fmt: str) -> bool:
 
 
 class Field:
-    def __init__(self, name: str, fmt: str):
+    def __init__(self, name: str, fmt: str, offset: int):
         self._name = name
         self.fmt = fmt
+        self.offset = offset
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self
+        s = slice(
+            self.offset,
+            self.offset + struct.calcsize(self.fmt),
+        )
+        t = struct.unpack_from(self.fmt, instance.view[s])
+        return t[0] if len(t) == 1 else t
 
 
 class HeaderMeta(type):
     def __new__(mcls, clsname, bases, ns):
         ns2 = dict(ns)
         format_merged = ""
+        offset: int = 0
         for name, val in ns.items():
             if name[:2] == "__" and name[-2:] == "__":
                 continue
             if isinstance(val, str):
                 if is_valid_struct_format(val):
-                    ns2[name] = Field(name, val)
+                    fmt: str = val
+                    ns2[name] = Field(name, fmt, offset)
+                    offset += struct.calcsize(fmt)
                     if format_merged == "":
-                        format_merged = val
+                        format_merged = fmt
                     elif format_merged[0] == val[0]:
-                        format_merged += val[1:]
+                        format_merged += fmt[1:]
                     else:
-                        format_merged += val
+                        format_merged += fmt
                 else:
                     raise TypeError(f"{val} Invalide struct format")
         ns2["_format_merged"] = format_merged
+        ns2["data_size"] = offset
         return super().__new__(mcls, clsname, bases, ns2)
 
 
-class Header(metaclass=HeaderMeta):
+class View(metaclass=HeaderMeta):
+    def __init__(self, bytesdata: bytes):
+        self.view = memoryview(bytesdata)
+
+
+class Header(View):
     magic = "<i"
     x1 = "<d"
     y1 = "<d"
@@ -57,7 +77,6 @@ class Header(metaclass=HeaderMeta):
     num_points = "<i"
 
 
-# def write_header(f: BinaryIO):
 def pack_header():
     magic = 0x1234
     x1 = min(x for x, _ in chain(*polygons))
@@ -69,7 +88,7 @@ def pack_header():
     return struct.pack(Header._format_merged, magic, x1, y1, x2, y2, num_points)
 
 
-if __name__ == "__main__":
+def write_read_header():
     with open("header.bin", "wb") as f:
         f.write(pack_header())
     with open("header.bin", "rb") as f:
@@ -77,3 +96,11 @@ if __name__ == "__main__":
             Header._format_merged, f.read()
         )
         print(magic, x1, y1, x2, y2, num_points)
+
+
+if __name__ == "__main__":
+    with open("header.bin", "rb") as f:
+        print(Header._format_merged)
+        print(Header.data_size)
+        h = Header(f.read(Header.data_size))
+        print(h.magic)
