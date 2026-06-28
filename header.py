@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # PYTHON_ARGCOMPLETE_OK
-from typing import BinaryIO
+from typing import Any, ClassVar, BinaryIO
 from itertools import chain
 import struct
 
@@ -25,6 +25,9 @@ class Field:
         self._name = name
         self.offset = offset
 
+    def unpack(self, instance: Any) -> object:
+        raise NotImplementedError("Subclass it")
+
     def __get__(self, instance, owner=None):
         if instance is None:
             return self
@@ -46,7 +49,7 @@ class FieldStr(Field):
 
 
 class FieldType(Field):
-    def __init__(self, name: str, factory: type, offset: int):
+    def __init__(self, name: str, factory: "ViewMeta", offset: int):
         super().__init__(name, offset)
         self.factory = factory
 
@@ -56,6 +59,8 @@ class FieldType(Field):
 
 
 class ViewMeta(type):
+    data_size: ClassVar[int]
+
     def __new__(mcls, clsname, bases, ns):
         ns2 = dict(ns)
         format_merged = ""
@@ -92,6 +97,9 @@ class ViewMeta(type):
 
 
 class View(metaclass=ViewMeta):
+    _fields: ClassVar[str]
+    _format_merged: ClassVar[str]
+
     def __init__(self, bytesdata: bytes):
         self.view = memoryview(bytesdata)
 
