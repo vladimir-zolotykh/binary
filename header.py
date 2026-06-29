@@ -5,6 +5,8 @@ from typing import Any, ClassVar, BinaryIO, Iterator
 from itertools import chain
 import struct
 
+PointType = tuple[float, float]
+PolygonType = list[list[PointType]]
 polygons = [
     [(1.0, 2.5), (3.5, 4.0), (2.5, 1.5)],
     [(7.0, 1.2), (5.1, 3.0), (0.5, 7.5), (0.8, 9.0)],
@@ -122,50 +124,7 @@ class Bbox(View):
 class Header(View):
     magic = "<i"
     bbox = Bbox
-    num_points = "<i"
-
-
-def write_polygons():
-    for poly in polygons:
-        fmt: str = "<dd"
-        sz = struct.calcsize(fmt)
-        f.write(sz * len(poly))
-        for pp in poly:
-            f.write(struct.pack(fmt, pp))
-
-
-class Polygon:
-    def __init__(self, bytesdata: bytes):
-        self.view = memoryview(bytesdata)
-
-    @classmethod
-    def from_file(cls):
-        (sz,) = struct.unpack("<i", f.read(4))
-        return cls(f.read(sz))
-
-
-class PolygonStr(Polygon):
-    def __init__(self, bytesdata, fmt):
-        super().__init__(bytesdata)
-        self.fmt = fmt
-
-    def iter_as(self, fmt) -> Iterator[tuple[float, float]]:
-        sz = struct.calcsize(fmt)
-        for off in range(0, len(self.view), sz):
-            s = slice(off, off + sz)
-            yield struct.unpack_from(fmt, self.view[s])
-
-
-class PolygonType(Polygon):
-    def __init__(self, bytesdata: bytes, factory: ViewMeta):
-        super().__init__(bytesdata)
-        self.factory = factory
-
-    def iter_as(self) -> Iterator[ViewMeta]:
-        sz = self.factory.data_size
-        for off in range(0, len(self.view), sz):
-            s = slice(off, off + sz)
-            yield self.factory(self.view[s])
+    num_polygons = "<i"
 
 
 def pack_header():
@@ -174,19 +133,19 @@ def pack_header():
     y1 = min(y for _, y in chain(*polygons))
     x2 = min(x for x, _ in chain(*polygons))
     y2 = min(y for _, y in chain(*polygons))
-    num_points = len(polygons)
+    num_polygons = len(polygons)
     print(Header._format_merged)
-    return struct.pack(Header._format_merged, magic, x1, y1, x2, y2, num_points)
+    return struct.pack(Header._format_merged, magic, x1, y1, x2, y2, num_polygons)
 
 
 def write_read_header():
     with open("header.bin", "wb") as f:
         f.write(pack_header())
     with open("header.bin", "rb") as f:
-        magic, x1, y1, x2, y2, num_points = struct.unpack(
+        magic, x1, y1, x2, y2, num_polygons = struct.unpack(
             Header._format_merged, f.read()
         )
-        print(magic, x1, y1, x2, y2, num_points)
+        print(magic, x1, y1, x2, y2, num_polygons)
 
 
 if __name__ == "__main__":
