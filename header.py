@@ -102,7 +102,7 @@ class View(metaclass=ViewMeta):
     _fields: ClassVar[str]
     _format_merged: ClassVar[str]
 
-    def __init__(self, bytesdata: bytes):
+    def __init__(self, bytesdata: bytes | memoryview):
         self.view = memoryview(bytesdata)
 
     def __repr__(self):
