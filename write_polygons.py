@@ -76,10 +76,11 @@ def write_polygons(f: BinaryIO, polygons: H.PolygonType = H.polygons) -> None:
 
 
 if __name__ == "__main__":
-    # if not os.path.exists("polygons.bin"):
-    #     with open("polygons.bin", "wb") as f:
-    #         write_polygons(f)
-    #         print("polygons.bin was written")
+    f: BinaryIO
+    if not os.path.exists("polygons.bin"):
+        with open("polygons.bin", "wb") as f:
+            write_polygons(f)
+            print("polygons.bin was written")
     with open("polygons.bin", "rb") as f:
         h: H.Header = H.Header(f.read(H.Header.data_size))
         for _ in range(cast(int, h.num_polygons)):
