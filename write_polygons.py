@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # PYTHON_ARGCOMPLETE_OK
-from typing import Iterator, Self, BinaryIO, cast
+from typing import Iterator, Self, BinaryIO, cast, Generic, TypeVar
 import os
 from itertools import chain
 import struct
@@ -83,9 +83,11 @@ if __name__ == "__main__":
             # polygon = PolygonStr.from_file(f, "<dd")
             # for pp in polygon:
             #     print(pp)
+            # polygon = PolygonType.from_file(f, H.Point)
             polygon = PolygonType.from_file(f, H.Point)
-            points: list[H.Point] = []
-            pp: H.Point
+            # points: list[H.Point] = []
+            points = []
+            # pp: H.Point
             for pp in polygon:
                 # print(pp)
                 points.append(pp)
