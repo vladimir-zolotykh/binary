@@ -35,17 +35,20 @@ class PolygonStr(Polygon):
             yield struct.unpack_from(self.fmt, self.view[s])
 
 
-class PolygonType(Polygon):
-    def __init__(self, bytesdata: bytes, factory: H.ViewMeta):
+T = TypeVar("T", bound=H.View)
+
+
+class PolygonType(Polygon, Generic[T]):
+    def __init__(self, bytesdata: bytes, factory: type[T]):
         super().__init__(bytesdata)
         self.factory = factory
 
     @classmethod
-    def from_file(cls, f: BinaryIO, factory: H.ViewMeta) -> Self:
+    def from_file(cls, f: BinaryIO, factory: type[T]) -> Self:
         (sz,) = struct.unpack("<i", f.read(4))
         return cls(f.read(sz), factory)
 
-    def __iter__(self) -> Iterator[H.ViewMeta]:
+    def __iter__(self) -> Iterator[T]:
         sz = self.factory.data_size
         for off in range(0, len(self.view), sz):
             s = slice(off, off + sz)
@@ -84,10 +87,10 @@ if __name__ == "__main__":
             # for pp in polygon:
             #     print(pp)
             # polygon = PolygonType.from_file(f, H.Point)
-            polygon = PolygonType.from_file(f, H.Point)
-            # points: list[H.Point] = []
+            polygon: PolygonType[H.Point] = PolygonType.from_file(f, H.Point)
+            points: list[H.Point] = []
             points = []
-            # pp: H.Point
+            pp: H.Point
             for pp in polygon:
                 # print(pp)
                 points.append(pp)
