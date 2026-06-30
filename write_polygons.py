@@ -84,20 +84,15 @@ if __name__ == "__main__":
         f1 = io.BytesIO(_data)
         f2 = io.BytesIO(_data)
 
-        def print_polygon_str():
-            polygons = [
+        pprint(
+            [
                 [pp for pp in PolygonStr.from_file(f1, "<dd")]
                 for _ in range(h.num_polygons)
             ]
-            pprint(polygons)
-
-        print_polygon_str()
-
-        def print_polygon_type():
-            polygons = [
+        )
+        pprint(
+            [
                 [pp for pp in PolygonType.from_file(f2, H.Point)]
                 for _ in range(h.num_polygons)
             ]
-            pprint(polygons)
-
-        print_polygon_type()
+        )
