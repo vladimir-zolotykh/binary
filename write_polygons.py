@@ -84,7 +84,7 @@ if __name__ == "__main__":
         f1 = io.BytesIO(_data)
         f2 = io.BytesIO(_data)
 
-        def print_pairs():
+        def print_polygon_str():
             polygon = []
             for _ in range(h.num_polygons):
                 pairs = []
@@ -93,7 +93,7 @@ if __name__ == "__main__":
                 polygon.append(pairs)
             pprint(polygon)
 
-        print_pairs()
+        print_polygon_str()
 
         for _ in range(cast(int, h.num_polygons)):
             polygon: PolygonType[H.Point] = PolygonType.from_file(f2, H.Point)
