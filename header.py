@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # PYTHON_ARGCOMPLETE_OK
-from typing import Any, ClassVar, BinaryIO, Iterator
+from __future__ import annotations
+from typing import Any, ClassVar, BinaryIO, Iterator, TYPE_CHECKING
 from itertools import chain
 import struct
 
@@ -122,9 +123,15 @@ class Bbox(View):
 
 
 class Header(View):
-    magic = "<i"
-    bbox = Bbox
-    num_polygons = "<i"
+
+    if TYPE_CHECKING:
+        magic: int
+        bbox: Bbox
+        num_polygons: int
+    else:
+        magic = "<i"
+        bbox = Bbox
+        num_polygons = "<i"
 
 
 def pack_header():

@@ -90,15 +90,5 @@ if __name__ == "__main__":
         def gen_polyson_type():
             yield PolygonType.from_file(f2, H.Point)
 
-        pprint(
-            [
-                [pp for pp in next(gen_polygon_str())]
-                for _ in range(cast(int, h.num_polygons))
-            ]
-        )
-        pprint(
-            [
-                [pp for pp in next(gen_polyson_type())]
-                for _ in range(cast(int, h.num_polygons))
-            ]
-        )
+        pprint([[pp for pp in next(gen_polygon_str())] for _ in range(h.num_polygons)])
+        pprint([[pp for pp in next(gen_polyson_type())] for _ in range(h.num_polygons)])
