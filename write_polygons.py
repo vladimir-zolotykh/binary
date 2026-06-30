@@ -4,6 +4,7 @@
 from typing import Iterator, Self, BinaryIO, cast, Generic, TypeVar
 import os
 import io
+from functools import singledispatch
 from itertools import chain
 import struct
 from pprint import pprint
@@ -72,6 +73,21 @@ def write_polygons(f: BinaryIO, polygons: H.PolygonType = H.polygons) -> None:
             f.write(struct.pack(fmt, *pp))
 
 
+@singledispatch
+def gen_polygon(arg, f):
+    pass
+
+
+@gen_polygon.register
+def _(arg: str, f: BinaryIO):
+    yield PolygonStr.from_file(f, arg)
+
+
+@gen_polygon.register
+def _(arg: H.ViewMeta, f: BinaryIO):
+    yield PolygonType.from_file(f, arg)
+
+
 if __name__ == "__main__":
     f: BinaryIO
     if not os.path.exists("polygons.bin"):
@@ -84,11 +100,17 @@ if __name__ == "__main__":
         f1 = io.BytesIO(_data)
         f2 = io.BytesIO(_data)
 
-        def gen_polygon_str():
-            yield PolygonStr.from_file(f1, "<dd")
+        # def gen_polygon_str():
+        #     yield PolygonStr.from_file(f1, "<dd")
 
-        def gen_polygon_type():
-            yield PolygonType.from_file(f2, H.Point)
-
-        pprint([[pp for pp in next(gen_polygon_str())] for _ in range(h.num_polygons)])
-        pprint([[pp for pp in next(gen_polygon_type())] for _ in range(h.num_polygons)])
+        # def gen_polygon_type():
+        #     yield PolygonType.from_file(f2, H.Point)
+        pprint(
+            [[pp for pp in next(gen_polygon("<dd", f1))] for _ in range(h.num_polygons)]
+        )
+        pprint(
+            [
+                [pp for pp in next(gen_polygon(H.Point, f2))]
+                for _ in range(h.num_polygons)
+            ]
+        )
