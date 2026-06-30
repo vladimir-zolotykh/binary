@@ -85,13 +85,13 @@ if __name__ == "__main__":
         f2 = io.BytesIO(_data)
 
         def print_polygon_str():
-            polygon = []
+            polygons = []
             for _ in range(h.num_polygons):
                 pairs = []
                 for pp in PolygonStr.from_file(f1, "<dd"):
                     pairs.append(pp)
-                polygon.append(pairs)
-            pprint(polygon)
+                polygons.append(pairs)
+            pprint(polygons)
 
         print_polygon_str()
 
