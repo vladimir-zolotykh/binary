@@ -84,15 +84,11 @@ if __name__ == "__main__":
         f1 = io.BytesIO(_data)
         f2 = io.BytesIO(_data)
 
-        pprint(
-            [
-                [pp for pp in PolygonStr.from_file(f1, "<dd")]
-                for _ in range(h.num_polygons)
-            ]
-        )
-        pprint(
-            [
-                [pp for pp in PolygonType.from_file(f2, H.Point)]
-                for _ in range(h.num_polygons)
-            ]
-        )
+        def gen_polygon_str():
+            yield PolygonStr.from_file(f1, "<dd")
+
+        def gen_polyson_type():
+            yield PolygonType.from_file(f2, H.Point)
+
+        pprint([[pp for pp in next(gen_polygon_str())] for _ in range(h.num_polygons)])
+        pprint([[pp for pp in next(gen_polyson_type())] for _ in range(h.num_polygons)])
