@@ -3,19 +3,16 @@
 # PYTHON_ARGCOMPLETE_OK
 from typing import Iterator, Self, BinaryIO, cast, Generic, TypeVar
 import os
+import io
 from itertools import chain
 import struct
+from pprint import pprint
 import header as H
 
 
 class Polygon:
     def __init__(self, bytesdata: bytes):
         self.view = memoryview(bytesdata)
-
-    # @classmethod
-    # def from_file(cls, f: BinaryIO, fmt: str) -> Self:
-    #     (sz,) = struct.unpack("<i", f.read(4))
-    #     return cls(f.read(sz), fmt)
 
 
 class PolygonStr(Polygon):
@@ -83,12 +80,23 @@ if __name__ == "__main__":
             print("polygons.bin was written")
     with open("polygons.bin", "rb") as f:
         h: H.Header = H.Header(f.read(H.Header.data_size))
+        _data = f.read()
+        f1 = io.BytesIO(_data)
+        f2 = io.BytesIO(_data)
+
+        def print_pairs():
+            polygon = []
+            for _ in range(h.num_polygons):
+                pairs = []
+                for pp in PolygonStr.from_file(f1, "<dd"):
+                    pairs.append(pp)
+                polygon.append(pairs)
+            pprint(polygon)
+
+        print_pairs()
+
         for _ in range(cast(int, h.num_polygons)):
-            # polygon = PolygonStr.from_file(f, "<dd")
-            # for pp in polygon:
-            #     print(pp)
-            # polygon = PolygonType.from_file(f, H.Point)
-            polygon: PolygonType[H.Point] = PolygonType.from_file(f, H.Point)
+            polygon: PolygonType[H.Point] = PolygonType.from_file(f2, H.Point)
             points: list[H.Point] = []
             points = []
             pp: H.Point
