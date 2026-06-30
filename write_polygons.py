@@ -85,23 +85,19 @@ if __name__ == "__main__":
         f2 = io.BytesIO(_data)
 
         def print_polygon_str():
-            polygons = []
-            for _ in range(h.num_polygons):
-                pairs = []
-                for pp in PolygonStr.from_file(f1, "<dd"):
-                    pairs.append(pp)
-                polygons.append(pairs)
+            polygons = [
+                [pp for pp in PolygonStr.from_file(f1, "<dd")]
+                for _ in range(h.num_polygons)
+            ]
             pprint(polygons)
 
         print_polygon_str()
 
         def print_polygon_type():
-            polygons = []
-            for _ in range(h.num_polygons):
-                points = []
-                for pp in PolygonType.from_file(f2, H.Point):
-                    points.append(pp)
-                polygons.append(points)
+            polygons = [
+                [pp for pp in PolygonType.from_file(f2, H.Point)]
+                for _ in range(h.num_polygons)
+            ]
             pprint(polygons)
 
         print_polygon_type()
