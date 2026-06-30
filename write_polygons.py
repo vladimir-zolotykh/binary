@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # PYTHON_ARGCOMPLETE_OK
-from typing import Iterator, Self, BinaryIO, cast, Generic, TypeVar
+from typing import Iterator, Self, BinaryIO, cast, Generic, TypeVar, Any
 import os
 import io
 from functools import singledispatch
@@ -79,12 +79,12 @@ def gen_polygon(arg, f):
 
 
 @gen_polygon.register
-def _(arg: str, f: BinaryIO):
+def _(arg: str, f: BinaryIO) -> Iterator[PolygonStr]:
     yield PolygonStr.from_file(f, arg)
 
 
 @gen_polygon.register
-def _(arg: H.ViewMeta, f: BinaryIO):
+def _(arg: H.ViewMeta, f: BinaryIO) -> Iterator[PolygonType]:
     yield PolygonType.from_file(f, arg)
 
 
@@ -99,12 +99,6 @@ if __name__ == "__main__":
         _data = f.read()
         f1 = io.BytesIO(_data)
         f2 = io.BytesIO(_data)
-
-        # def gen_polygon_str():
-        #     yield PolygonStr.from_file(f1, "<dd")
-
-        # def gen_polygon_type():
-        #     yield PolygonType.from_file(f2, H.Point)
         pprint(
             [[pp for pp in next(gen_polygon("<dd", f1))] for _ in range(h.num_polygons)]
         )
