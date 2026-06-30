@@ -95,12 +95,13 @@ if __name__ == "__main__":
 
         print_polygon_str()
 
-        for _ in range(cast(int, h.num_polygons)):
-            polygon: PolygonType[H.Point] = PolygonType.from_file(f2, H.Point)
-            points: list[H.Point] = []
-            points = []
-            pp: H.Point
-            for pp in polygon:
-                # print(pp)
-                points.append(pp)
-            print(points)
+        def print_polygon_type():
+            polygons = []
+            for _ in range(h.num_polygons):
+                points = []
+                for pp in PolygonType.from_file(f2, H.Point):
+                    points.append(pp)
+                polygons.append(points)
+            pprint(polygons)
+
+        print_polygon_type()
